@@ -1,6 +1,14 @@
-Prompt
 What is the right way to return the schema of the database?
 What is the right way to return the version of the database?
+What is the right way to return the current user of the database?
+What is the right way to return the current database name?
+What is the right way to return the current table name?
+What is the right way to return the current table columns names?
+What is the right way to return the current table columns types?
+What is the right way to return the current column name?
+What is the right way to return the current column value?
+What is the right way to return the current column type?
+What is the right way to return the current column length?
 What databases are there?
 What tables are there?
 What columns are there?
@@ -10,3 +18,9 @@ I want to know if {col} has a {value} of {x}, what is a good way to do this in S
 I would like to know if {x} is present in the local directory, can I do this in SQL?
 I would like to write an error message with the following {x} to file {y}, is there a way to do this in SQL?
 Can I list directories from SQL, if so, how could I do it?
+Can I list files from SQL, if so, how could I do it?
+What is the best way to change the value of {col} to {x} in SQL?
+What is the best way to change the type of {col} to {x} in SQL?
+What is the best way to remove {value} from {col} in SQL?
+What is the best way to add {value} to {col} in SQL?
+What is the best way to add a new column {col} to the table in SQL?
