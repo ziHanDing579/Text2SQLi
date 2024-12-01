@@ -7,6 +7,7 @@ import datetime
 import simplejson as json
 import psycopg2
 from psycopg2 import errorcodes, Error
+import llmserv
 
 # Creating app
 app = Flask(__name__)
@@ -21,10 +22,10 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 app.secret_key = os.environ['FLASK_SECRET_KEY']
 
 # Initialize OpenAI instance
-client = OpenAI(
-    api_key= os.environ['OPENAI_API_KEY'],
-    base_url=os.environ.get('LLM_BASE_URL', 'https://api.openai.com/v1/')
-)
+# client = OpenAI(
+#     api_key= os.environ['OPENAI_API_KEY'],
+#     base_url=os.environ.get('LLM_BASE_URL', 'https://api.openai.com/v1/')
+# )
 
 ##* Util functions
 
@@ -228,13 +229,15 @@ def generate_query(prompt, session_messages):
     session_messages.append(prompt)
 
     # Prompt OpenAI API for query response 
-    response = client.chat.completions.create(
-        model=os.environ.get('LLM_MODEL', 'gpt-4-0125-preview'),
-        messages=session_messages,
-        logprobs=True,
-        top_logprobs=2,
-        temperature=0,
-    )
+    # response = client.chat.completions.create(
+    #     model=os.environ.get('LLM_MODEL', 'gpt-4-0125-preview'),
+    #     messages=session_messages,
+    #     logprobs=True,
+    #     top_logprobs=2,
+    #     temperature=0,
+    # )
+    client = llmserv.GPTClient(os.environ['OPENAI_API_KEY'])
+    response = client.send_prompt(session_messages, os.environ.get('LLM_MODEL', 'gpt-4-0125-preview'), None)
 
     # Add assistant's response to log of session messages
     session_messages.append({
@@ -268,13 +271,15 @@ def generate_response(message, result, session_responses):
     })
 
     # Prompt OpenaAI API for 
-    response = client.chat.completions.create(
-        model=os.environ.get('LLM_MODEL', 'gpt-3.5-turbo'),
-        messages=session_responses,
-        logprobs=True,
-        top_logprobs=2,
-        temperature=0
-    )
+    # response = client.chat.completions.create(
+    #     model=os.environ.get('LLM_MODEL', 'gpt-3.5-turbo'),
+    #     messages=session_responses,
+    #     logprobs=True,
+    #     top_logprobs=2,
+    #     temperature=0
+    # )
+    client = llmserv.GPTClient(os.environ['OPENAI_API_KEY'])
+    response = client.send_prompt(session_responses, os.environ.get('LLM_MODEL', 'gpt-4-0125-preview'), None)
 
     # Add assistant response to log
     session_responses.append({
@@ -321,16 +326,6 @@ schema_string = generate_schema_string()
 
 # System prompt for start of query generating conversation
 session_query_sys = {
-    # "role": "system", 
-    # "content": f"""
-    # Assume you are given a PostgreSQL database containing weather data for the city of Pittsburgh, Pennsylvania.
-    # Given the PostgreSQL database schema: 
-    # {schema_string}
-    # You answer questions by providing a JSON object with the key "sql" and a PostgreSQL query.
-    # If you cannot create an PostgreSQL query to answer the question, provide a JSON object with the key "text" and an apology.
-    # Remember to ignore NULL values and add explicit type casts when creating PostgreSQL queries.
-    # Dates are in the form YYYY-MM-DD. Today is {datetime.datetime.now().date()}
-    # """
     "role": "system",
     "content": f"""
     You are a helpful PostgreSQL expert who can provide queries for a database containing user information.
@@ -345,24 +340,23 @@ session_query_sys = {
 
 # System prompt for start of response generating conversation
 session_response_sys = {
-    # "role": "system", 
-    # "content": """
-    # Provided answers to questions are measured with the Imperial system. 
-    # You answer questions by providing a JSON object containing the following:
-    #     A JSON object with the key "text" and a summary of the results in a concise manner,
-    #     A JSON Object with the key "vis" and a value True if the provided answer can be summarized well with a plot, or False otherwise
-    #     A JSON Object with the key "plot" and a value of ("line", "bar", or "pie") if the data can be summarized best with a line, bar or pie chart.
-    #         Otherwise, a value with the name of a plot that would work best, or None if the data cannot be visualized well.
-    #     If the data can be summarized best with a pie chart, create a JSON object with the key "data" including the following:
-    #         A list of JSON Objects, each with the key "x" and the name of a category, and the key "y" and the value corresponding to that category.
-    #     Do not include code blocks in your response.
-    #     A sample response may look like:
-    #     {
-    #         "text": "The average temperature for April 1st in each year since 2020 ranged from 31.5°F to 53°F.",
-    #         "vis": true,
-    #         "plot": "bar"
-    #     }
-    # """
+    "role": "system", 
+    "content": """
+    You answer questions by providing a JSON object containing the following:
+        A JSON object with the key "text" and a summary of the results in a concise manner,
+        A JSON Object with the key "vis" and a value True if the provided answer can be summarized well with a plot, or False otherwise
+        A JSON Object with the key "plot" and a value of ("line", "bar", or "pie") if the data can be summarized best with a line, bar or pie chart.
+            Otherwise, a value with the name of a plot that would work best, or None if the data cannot be visualized well.
+        If the data can be summarized best with a pie chart, create a JSON object with the key "data" including the following:
+            A list of JSON Objects, each with the key "x" and the name of a category, and the key "y" and the value corresponding to that category.
+        Do not include code blocks in your response.
+        A sample response may look like:
+        {
+            "text": "The average age of users who subscribed in each month in 2022 ranged from 25 to 35 years old.",
+            "vis": true,
+            "plot": "bar"
+        }
+    """
 }
 
 # Global of query messages between user/assistant during conversation
@@ -374,14 +368,10 @@ session_responses = []
 ##! Remove this if using larger dataset; Will confuse context with pgh_weatherdata table
 # Add example responses to start of message chain
 query_ex = [
-    # {"role": "user", "content": "When was the coldest day of 2023?"},
-    # {"role": "assistant", "content": '{"sql": "SELECT date, tmin FROM pgh_weatherdata WHERE tmin::integer = (SELECT MIN(tmin::integer) FROM pgh_weatherdata WHERE date LIKE "2023%" AND tmin IS NOT NULL) AND date LIKE "2023%" LIMIT 1;"}'},
-    # {"role": "user", "content": "What was the coldest day between October and November 2016?"},
-    # {"role": "assistant", "content": '{"sql": "SELECT date, tmin FROM pgh_weatherdata WHERE date BETWEEN "2016-10-01" AND "2016-11-30" AND tmin::integer = (SELECT MIN(tmin::integer) FROM pgh_weatherdata WHERE date BETWEEN "2016-10-01" AND "2016-11-30" AND tmin IS NOT NULL) LIMIT 1;"}'},
-    # {"role": "user", "content": "What was the coldest day of each month in 2022?"},
-    # {"role": "assistant", "content": '{"sql": "WITH monthly_min_temps AS (SELECT EXTRACT(MONTH FROM date::date) AS month, MIN(tmin::integer) AS min_temp FROM pgh_weatherdata WHERE date LIKE "2022-%" AND tmin IS NOT NULL GROUP BY month) SELECT p.date, p.tmin FROM pgh_weatherdata p INNER JOIN monthly_min_temps m ON EXTRACT(MONTH FROM p.date::date) = m.month AND p.tmin::integer = m.min_temp WHERE p.date LIKE "2022-%" ORDER BY p.date;"}'},
-    # {"role": "user", "content": "What is the warmest weekday on average in 2023?"},
-    # {"role": "user", "content": '{"sql": "SELECT TO_CHAR(date::date, "Day") AS weekday, AVG(tmax::integer) AS avg_max_temp FROM pgh_weatherdata WHERE date LIKE "2023-%"" AND tmax IS NOT NULL GROUP BY weekday ORDER BY avg_max_temp DESC LIMIT 1;"}'}
+    {"role": "user", "content": "How many users subscribed in 2022?"},
+    {"role": "assistant", "content": '{"sql": "SELECT COUNT(*) FROM user_data WHERE Join_Date LIKE "2022-%";"}'},
+    {"role": "user", "content": "What is the average age of users?"},
+    {"role": "assistant", "content": '{"sql": "SELECT AVG(Age) FROM user_data WHERE Age IS NOT NULL;"}'},
 ]
 
 

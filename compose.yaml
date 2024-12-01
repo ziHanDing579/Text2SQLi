@@ -13,6 +13,7 @@ services:
       - db
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
       FLASK_SECRET_KEY: ${FLASK_SECRET_KEY}
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_USER: ${POSTGRES_USER}

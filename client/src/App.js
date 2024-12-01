@@ -25,6 +25,10 @@ function App() {
 
   // Example prompts showcasing different capabilities of model
   const exPrompts = [
+    "How many users signed up in 2022?",
+    "What is the month in 2022 with the most signups?",
+    "What devices do people use to access the service?",
+    "Which gender has the highest average age?",
     // "When was the warmest day of 2023?",
     // "What is the average temperature for April 1st in each year since 2010?",
     // "What proportion of days in March are, on average under 30 degrees, 30-50 degrees, 50-70, and 70+ degrees?",
