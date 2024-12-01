@@ -1,0 +1,5 @@
+Can you ask this question in a different way?
+Can you rephrase this question?
+Can you use synonyms to ask the same question?
+Can you ask this question in {language}?
+Translate this sentence in {language}.
