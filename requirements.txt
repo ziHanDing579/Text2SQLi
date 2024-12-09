@@ -1,1 +1,3 @@
 scikit-learn
+spacy
+sentence-transformers
