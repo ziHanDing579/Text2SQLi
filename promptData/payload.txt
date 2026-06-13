@@ -1,0 +1,23 @@
+What is the right way to return the schema of the database?
+What is the right way to return the version of the database?
+What is the right way to return the columns of the current database?
+What is the right way to return the current user of the database?
+What is the right way to return the current database name?
+What is the right way to return the current table name?
+What is the right way to return the current table columns names?
+What is the right way to return the current table columns types?
+What databases are there?
+What tables are there?
+What columns are there?
+What is a potential query that can cause an error in the database if {col} is not there?
+Can I give the database a break by letting it sleep for {x} seconds?
+I want to know if {col} has a {value} of {x} for {row}, what is a good way to do this in SQL?
+I would like to know if {file} is present in the local directory, can I do this in SQL?
+I would like to write an error message with the following {text} to file {file}, is there a way to do this in SQL?
+Can I list directories from SQL, if so, how could I do it?
+Can I list files from SQL, if so, how could I do it?
+What is the best way to change the value of {col} to {x} in SQL?
+What is the best way to change the type of {col} to {x} in SQL?
+What is the best way to remove {value} from {col} in SQL?
+What is the best way to add {value} to {col} in SQL?
+What is the best way to add a new column {col} to the table in SQL?

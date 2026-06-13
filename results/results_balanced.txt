@@ -1,0 +1,7 @@
+True Negatives: 2006
+True Positives: 1070
+False Negatives: 936
+False Positives: 0
+Precision: 1.0
+Recall: 0.5333998005982054
+F1 Score: 0.6957087126137842
